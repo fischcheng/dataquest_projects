@@ -1,0 +1,38 @@
+create TABLE wishlist (wishlist_id INTEGER PRIMARY KEY, customer_id INTEGER, name TEXT, FOREIGN KEY (customer_id) REFERENCES customer(customer_id));
+
+
+CREATE TABLE wishlist_track (wishlist_id INTEGER, track_id INTEGER, PRIMARY KEY (wishlist_id, track_id), FOREIGN KEY (wishlist_id) REFERENCES wishlist(wishlist_id), FOREIGN KEY (track_id) REFERENCES track(track_id));
+
+INSERT INTO wishlist VALUES (1,34,"Joao's awesome wishlist");
+
+
+ALTER TABLE wishlist
+ADD COLUMN active NUMERIC;
+
+
+ALTER TABLE wishlist_track
+ADD COLUMN active NUMERIC;
+
+UPDATE wishlist
+SET active =  1;
+UPDATE wishlist_track
+SET active =  1;
+
+
+ALTER TABLE invoice
+ADD COLUMN tax NUMERIC;
+
+ALTER TABLE invoice ADD COLUMN subtotal NUMERIC;
+UPDATE invoice
+SET 
+tax=0,
+subtotal = total;
+.quit
+
+CREATE TABLE purchase (
+    purchase_id INTEGER PRIMARY KEY,
+    user_id INTEGER,
+    purchase_date TEXT,
+    total NUMERIC,
+    FOREIGN KEY (user_id) REFERENCES user(user_id)
+);

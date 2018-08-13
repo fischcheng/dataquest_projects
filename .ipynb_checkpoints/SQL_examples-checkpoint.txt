@@ -1,0 +1,105 @@
+# SQL courses:
+
+# Join multiple tables
+SELECT il.track_id, t.name track_name, mt.name track_type, il.unit_price, il.quantity  FROM invoice_line il
+INNER JOIN track t ON t.track_id = il.track_id
+INNER JOIN media_type mt ON mt.media_type_id = t.media_type_id
+WHERE invoice_id = 4;
+
+# Join 5 tables:
+SELECT il.track_id, t.name track_name, ar.name artist_name, mt.name track_type, il.unit_price, il.quantity  FROM invoice_line il
+INNER JOIN track t ON t.track_id = il.track_id
+INNER JOIN media_type mt ON mt.media_type_id = t.media_type_id
+INNER JOIN album ab ON ab.album_id = t.album_id
+INNER JOIN artist ar ON ar.artist_id = ab.artist_id
+WHERE invoice_id = 4;
+
+# Top five sale of album using a subquery within Inner Join
+SELECT ta.album_title album, ta.artist_name artist, COUNT(*) tracks_purchased
+FROM invoice_line il
+INNER JOIN (
+            SELECT
+                t.track_id,
+                ar.name artist_name
+                al.title album_title
+            FROM track t
+            INNER JOIN album al ON al.album_id = t.album_id
+            INNER JOIN artist ar ON ar.artist_id = al.artist_id
+           ) ta
+           ON ta.track_id = il.track_id
+GROUP BY 1,2
+ORDER BY tracks_purchased DESC
+LIMIT 5;
+
+## Recursive join to the table itself
+SELECT e1.first_name || " " || e1.last_name employee_name, e1.title employee_title, e2.first_name || " " || e2.last_name supervisor_name, e2.title supervisor_title FROM employee e1
+
+LEFT JOIN employee e2 ON e1.reports_to=e2.employee_id
+ORDER BY employee_name;
+
+
+### Case statement:
+SELECT 
+    c.first_name || " " || c.last_name customer_name, 
+    COUNT(i.invoice_id) number_of_purchases,
+    SUM(i.total) total_spent,
+    CASE
+        WHEN sum(i.total) < 40 THEN 'small spender'
+        WHEN sum(i.total) >100 THEN 'big spender'
+        ELSE 'regular'
+        END
+        AS customer_category
+FROM invoice i
+INNER JOIN customer c on i.customer_id = c.customer_id
+GROUP BY 1 ORDER BY 1;
+
+
+
+### With statement:
+WITH plist AS (
+    SELECT 
+        p.playlist_id,
+        p.name playlist_name,
+        t.name track_name,
+        CAST(t.milliseconds/1000 AS Float) length_seconds FROM playlist AS p 
+    LEFT JOIN playlist_track AS pt ON p.playlist_id=pt.playlist_id
+    LEFT JOIN track AS t ON t.track_id=pt.track_id
+)
+
+SELECT 
+    playlist_id, 
+    playlist_name, 
+    COUNT(track_name) number_of_tracks, 
+    SUM(length_seconds) length_seconds
+FROM plist
+GROUP BY 1, 2
+ORDER BY playlist_id;
+
+
+### Create a VIEW (a user-defined function)
+CREATE VIEW chinook.customer_gt_90_dollars AS
+    SELECT c.* FROM chinook.invoice i
+    INNER JOIN chinook.customer c ON i.customer_id=c.customer_id
+    GROUP BY c.customer_id
+    HAVING SUM(i.total)>90;
+    
+SELECT * FROM chinook.customer_gt_90_dollars;
+
+
+### Intersect between two views and select
+WITH customers_usa_gt_90 AS (
+    SELECT * FROM customer_gt_90_dollars
+    INTERSECT
+    SELECT * FROM customer_usa
+    )
+
+SELECT 
+    e.first_name || " "|| e.last_name, 
+    COUNT(c.customer_id) customers_usa_gt_90
+FROM employee e
+LEFT JOIN customers_usa_gt_90 c ON c.support_rep_id=e.employee_id
+WHERE e.title ='Sales Support Agent'
+GROUP BY 1 
+ORDER BY 1;
+
+
